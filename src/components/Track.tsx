@@ -1,18 +1,69 @@
-import { faMagnifyingGlass } from "@fortawesome/free-solid-svg-icons";
+import {
+  faMagnifyingGlass,
+  faTruckFast,
+} from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useState } from "react";
 
-const Track = () => {
-  const trackPackage = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    console.log(trackingNumber);
-  };
+type TrackingSummary = {
+  lastEvent: string;
+  lastUpdate: string;
+  carrier: string;
+  estimate: string;
+  origin: string;
+  destination: string;
+  servicetype: string;
+};
 
+type TrackingEvents = {
+  events: string[];
+};
+
+type Event = {
+  status: string;
+  location: string;
+  date: string;
+};
+
+const Track = () => {
   const [trackingNumber, setTrackingNumber] = useState<string>("");
+  const [trackingData, setTrackingData] = useState<TrackingSummary | null>(
+    null,
+  );
+  const [events, setEvents] = useState<TrackingEvents | null>(null);
+
+  const trackPackage = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const response = await fetch("/api/track", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        trackingNumber,
+      }),
+    });
+
+    const data = await response.json();
+    console.log(data);
+    setTrackingData({
+      lastEvent: data.data.trackings[0].events[0].status,
+      lastUpdate: data.data.trackings[0].events[0].occurrenceDatetime,
+      carrier: data.data.trackings[0].events[0].courierCode,
+      estimate: data.data.trackings[0].events[0].occurrenceDatetime,
+      origin: data.data.trackings[0].shipment.originCountryCode,
+      destination: data.data.trackings[0].shipment.destinationCountryCode,
+      servicetype: data.data.trackings[0].shipment.destinationCountryCode,
+    });
+    setEvents({
+      events: data.data.trackings[0].events,
+    });
+  };
 
   return (
     <div className="text-white h-screen">
-      <div className="input-container py-4 my-0 mx-auto w-fit">
+      <div className="input-container py-4 my-0 mx-auto max-w-[40%]">
         <div>
           <h2>Track your shipment</h2>
           <p className="mb-2">
@@ -36,6 +87,62 @@ const Track = () => {
           </button>
         </form>
         <div></div>
+        {trackingData && (
+          <div className="mt-4 border p-4 rounded flex items-center justify-between">
+            <div>
+              <FontAwesomeIcon icon={faTruckFast} />
+            </div>
+            <div>
+              <p>Shipment status</p>
+              <h3>{trackingData.lastEvent}</h3>
+              <p>{`Last update : ${trackingData.lastUpdate}`}</p>
+            </div>
+            <div>
+              <p>{trackingData.lastEvent}</p>
+            </div>
+          </div>
+        )}
+        <div>
+          {trackingData && (
+            <div className="flex flex-wrap">
+              <div className="card w-[33%]">
+                <p>Tracking #</p>
+                {trackingNumber}
+              </div>
+              <div className="card w-[33%]">
+                <p>Carrier</p>
+                {trackingData.carrier}
+              </div>
+              <div className="card w-[33%]">
+                <p>Estimated delivery</p>
+                {trackingData.estimate}
+              </div>
+              <div className="card w-[33%]">
+                <p>Origin</p>
+                {trackingData.origin ? (
+                  <p>{trackingData.origin}</p>
+                ) : (
+                  "No origin"
+                )}
+              </div>
+              <div className="card w-[33%]">
+                <p>Destination</p>
+                {trackingData.destination ? (
+                  <p>{trackingData.destination}</p>
+                ) : (
+                  "No destination"
+                )}
+              </div>
+
+              <div className="card w-[33%]">
+                <p>
+                  <p>Service type</p>
+                </p>
+                <p>international</p>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
