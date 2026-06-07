@@ -1,3 +1,4 @@
+import { TrackingEvents, TrackingSummary } from "@/types";
 import {
   faMagnifyingGlass,
   faTruckFast,
@@ -5,32 +6,13 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import React, { useState } from "react";
 
-type TrackingSummary = {
-  lastEvent: string;
-  lastUpdate: string;
-  carrier: string;
-  estimate: string;
-  origin: string;
-  destination: string;
-  servicetype: string;
-};
-
-type TrackingEvents = {
-  events: string[];
-};
-
-type Event = {
-  status: string;
-  location: string;
-  date: string;
-};
-
 const Track = () => {
   const [trackingNumber, setTrackingNumber] = useState<string>("");
   const [trackingData, setTrackingData] = useState<TrackingSummary | null>(
     null,
   );
   const [events, setEvents] = useState<TrackingEvents | null>(null);
+  const [eventDate, setEventDate] = useState<string | null>(null);
 
   const trackPackage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -62,7 +44,7 @@ const Track = () => {
   };
 
   return (
-    <div className="text-white h-screen">
+    <div className="text-white">
       <div className="input-container py-4 my-0 mx-auto max-w-[40%]">
         <div>
           <h2>Track your shipment</h2>
@@ -89,13 +71,16 @@ const Track = () => {
         <div></div>
         {trackingData && (
           <div className="mt-4 border p-4 rounded flex items-center justify-between">
-            <div>
-              <FontAwesomeIcon icon={faTruckFast} />
-            </div>
-            <div>
-              <p>Shipment status</p>
-              <h3>{trackingData.lastEvent}</h3>
-              <p>{`Last update : ${trackingData.lastUpdate}`}</p>
+            <div className="flex items-center">
+              <FontAwesomeIcon
+                icon={faTruckFast}
+                className="p-2 bg-blue-500 text-[var(--dark)]"
+              />
+              <div>
+                <p>Shipment status</p>
+                <h3>{trackingData.lastEvent}</h3>
+                <p>{`Last update : ${trackingData.lastUpdate.split("T")}`}</p>
+              </div>
             </div>
             <div>
               <p>{trackingData.lastEvent}</p>
@@ -104,20 +89,20 @@ const Track = () => {
         )}
         <div>
           {trackingData && (
-            <div className="flex flex-wrap">
-              <div className="card w-[33%]">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 my-2 mx-0">
+              <div className="card p-2 rounded bg-[var(--light)]">
                 <p>Tracking #</p>
                 {trackingNumber}
               </div>
-              <div className="card w-[33%]">
+              <div className="card p-2 rounded bg-[var(--light)]">
                 <p>Carrier</p>
                 {trackingData.carrier}
               </div>
-              <div className="card w-[33%]">
+              <div className="card p-2 rounded bg-[var(--light)]">
                 <p>Estimated delivery</p>
-                {trackingData.estimate}
+                {trackingData.estimate.split("T")[0]}
               </div>
-              <div className="card w-[33%]">
+              <div className="card p-2 rounded bg-[var(--light)]">
                 <p>Origin</p>
                 {trackingData.origin ? (
                   <p>{trackingData.origin}</p>
@@ -125,7 +110,7 @@ const Track = () => {
                   "No origin"
                 )}
               </div>
-              <div className="card w-[33%]">
+              <div className="card p-2 rounded bg-[var(--light)]">
                 <p>Destination</p>
                 {trackingData.destination ? (
                   <p>{trackingData.destination}</p>
@@ -134,7 +119,7 @@ const Track = () => {
                 )}
               </div>
 
-              <div className="card w-[33%]">
+              <div className="card p-2 rounded bg-[var(--light)]">
                 <p>
                   <p>Service type</p>
                 </p>
@@ -142,6 +127,32 @@ const Track = () => {
               </div>
             </div>
           )}
+        </div>
+        <div className="bg-[var(--light)] rounded-xl">
+          {events?.events.map((event) => {
+            const date = new Date(event.occurrenceDatetime);
+
+            const time = date.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            });
+
+            return (
+              <div className="my-2" key={event.eventId}>
+                <div className="flex">
+                  <p className="text-xs">
+                    {event.occurrenceDatetime.split("T")[0]}
+                  </p>
+                  <p className=" text-xs mx-1"> · </p>
+                  <p className="text-xs">{time}</p>
+                </div>
+
+                <p className="text-base">{event.status}</p>
+                <p className="text-xs">{event.location}</p>
+              </div>
+            );
+          })}
         </div>
       </div>
     </div>
