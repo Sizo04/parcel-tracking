@@ -1,3 +1,4 @@
+import { formatTrackingTime } from "@/helpers/formatTrackingTime";
 import { TrackingEvents, TrackingSummary } from "@/types";
 import {
   faMagnifyingGlass,
@@ -69,8 +70,9 @@ const Track = () => {
           </button>
         </form>
         <div></div>
+
         {trackingData && (
-          <div className="mt-4 border p-4 rounded flex items-center justify-between">
+          <div className="mt-4 p-4 rounded-lg flex items-center justify-between bg-[var(--light)]">
             <div className="flex items-center">
               <FontAwesomeIcon
                 icon={faTruckFast}
@@ -79,7 +81,7 @@ const Track = () => {
               <div>
                 <p>Shipment status</p>
                 <h3>{trackingData.lastEvent}</h3>
-                <p>{`Last update : ${trackingData.lastUpdate.split("T")}`}</p>
+                <p>{`Last update :${trackingData.lastUpdate.split("T")[0]} ${formatTrackingTime(trackingData.lastUpdate)}`}</p>
               </div>
             </div>
             <div>
@@ -128,28 +130,43 @@ const Track = () => {
             </div>
           )}
         </div>
-        <div className="bg-[var(--light)] rounded-xl">
-          {events?.events.map((event) => {
-            const date = new Date(event.occurrenceDatetime);
-
-            const time = date.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: true,
-            });
+        <div className="bg-[var(--light)] rounded-xl p-4">
+          <h3>Tracking events</h3>
+          {events?.events.map((event, index) => {
+            const isLast = index === events.events.length - 1;
+            const isFirst = index === 0;
 
             return (
-              <div className="my-2" key={event.eventId}>
-                <div className="flex">
-                  <p className="text-xs">
-                    {event.occurrenceDatetime.split("T")[0]}
-                  </p>
-                  <p className=" text-xs mx-1"> · </p>
-                  <p className="text-xs">{time}</p>
+              <div key={event.eventId} className="flex gap-3">
+                <div className="flex flex-col items-center">
+                  <div
+                    className={` h-2 w-2 rounded-full ${
+                      isFirst ? "bg-blue-500" : "bg-green-500"
+                    }`}
+                  ></div>
+
+                  {!isLast && (
+                    <div className="m-1 h-full w-[1px] bg-gray-600" />
+                  )}
                 </div>
 
-                <p className="text-base">{event.status}</p>
-                <p className="text-xs">{event.location}</p>
+                <div className="py-2">
+                  <div className="flex">
+                    <p className="text-xs">
+                      {event.occurrenceDatetime.split("T")[0]}
+                    </p>
+
+                    <p className="mx-1 text-xs"> · </p>
+
+                    <p className="text-xs">
+                      {" "}
+                      {formatTrackingTime(event.occurrenceDatetime)}
+                    </p>
+                  </div>
+
+                  <p className="text-base">{event.status}</p>
+                  <p className="text-xs">{event.location}</p>
+                </div>
               </div>
             );
           })}
