@@ -13,7 +13,6 @@ const Track = () => {
     null,
   );
   const [events, setEvents] = useState<TrackingEvents | null>(null);
-  const [eventDate, setEventDate] = useState<string | null>(null);
 
   const trackPackage = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -30,17 +29,22 @@ const Track = () => {
 
     const data = await response.json();
     console.log(data);
+    const tracking = data?.data?.trackings?.[0];
+    const firstEvent = tracking?.events?.[0];
+    const shipment = tracking?.shipment;
+
     setTrackingData({
-      lastEvent: data.data.trackings[0].events[0].status,
-      lastUpdate: data.data.trackings[0].events[0].occurrenceDatetime,
-      carrier: data.data.trackings[0].events[0].courierCode,
-      estimate: data.data.trackings[0].events[0].occurrenceDatetime,
-      origin: data.data.trackings[0].shipment.originCountryCode,
-      destination: data.data.trackings[0].shipment.destinationCountryCode,
-      servicetype: data.data.trackings[0].shipment.destinationCountryCode,
+      lastEvent: firstEvent?.status || "No status",
+      lastUpdate: firstEvent?.occurrenceDatetime || "",
+      carrier: firstEvent?.courierCode || "Unknown",
+      estimate: firstEvent?.occurrenceDatetime || "",
+      origin: shipment?.originCountryCode || "Unknown",
+      destination: shipment?.destinationCountryCode || "Unknown",
+      servicetype: shipment?.serviceType || "Unknown",
     });
+
     setEvents({
-      events: data.data.trackings[0].events,
+      events: tracking?.events || [],
     });
   };
 
@@ -48,7 +52,7 @@ const Track = () => {
     <div className="text-white">
       <div className="input-container py-4 my-0 mx-auto max-w-[40%]">
         <div>
-          <h2>Track your shipment</h2>
+          <h1 className="text-3xl font-bold">Track your shipment</h1>
           <p className="mb-2">
             Enter a tracking number to get real-time updates on your parcel's
             location and status.
@@ -69,14 +73,23 @@ const Track = () => {
             <p>Track</p>
           </button>
         </form>
-        <div></div>
+        <div>
+          <p>Try:</p>
+          <div className="tracking-numbers">
+            <p>1Z999AA10123456784</p>
+          </div>
+        </div>
 
         {trackingData && (
           <div className="mt-4 p-4 rounded-lg flex items-center justify-between bg-[var(--light)]">
-            <div className="flex items-center">
+            <div className="flex gap-2 items-center">
               <FontAwesomeIcon
                 icon={faTruckFast}
-                className="p-2 bg-blue-500 text-[var(--dark)]"
+                className={`p-3 bg-[#E6F1FB] rounded ${
+                  trackingData.lastEvent.includes("DELIVERED")
+                    ? "text-green-700"
+                    : "text-red-700"
+                }`}
               />
               <div>
                 <p>Shipment status</p>
@@ -130,47 +143,49 @@ const Track = () => {
             </div>
           )}
         </div>
-        <div className="bg-[var(--light)] rounded-xl p-4">
-          <h3>Tracking events</h3>
-          {events?.events.map((event, index) => {
-            const isLast = index === events.events.length - 1;
-            const isFirst = index === 0;
+        {trackingData && (
+          <div className="bg-[var(--light)] rounded-xl p-4">
+            <h3>Tracking events</h3>
+            {events?.events.map((event, index) => {
+              const isLast = index === events.events.length - 1;
+              const isFirst = index === 0;
 
-            return (
-              <div key={event.eventId} className="flex gap-3">
-                <div className="flex flex-col items-center">
-                  <div
-                    className={` h-2 w-2 rounded-full ${
-                      isFirst ? "bg-blue-500" : "bg-green-500"
-                    }`}
-                  ></div>
+              return (
+                <div key={event.eventId} className="flex gap-3">
+                  <div className="flex flex-col items-center">
+                    <div
+                      className={` h-2 w-2 rounded-full ${
+                        isFirst ? "bg-blue-500" : "bg-green-500"
+                      }`}
+                    ></div>
 
-                  {!isLast && (
-                    <div className="m-1 h-full w-[1px] bg-gray-600" />
-                  )}
-                </div>
-
-                <div className="py-2">
-                  <div className="flex">
-                    <p className="text-xs">
-                      {event.occurrenceDatetime.split("T")[0]}
-                    </p>
-
-                    <p className="mx-1 text-xs"> · </p>
-
-                    <p className="text-xs">
-                      {" "}
-                      {formatTrackingTime(event.occurrenceDatetime)}
-                    </p>
+                    {!isLast && (
+                      <div className="m-1 h-full w-[1px] bg-gray-600" />
+                    )}
                   </div>
 
-                  <p className="text-base">{event.status}</p>
-                  <p className="text-xs">{event.location}</p>
+                  <div className="py-2">
+                    <div className="flex">
+                      <p className="text-xs">
+                        {event.occurrenceDatetime.split("T")[0]}
+                      </p>
+
+                      <p className="mx-1 text-xs"> · </p>
+
+                      <p className="text-xs">
+                        {" "}
+                        {formatTrackingTime(event.occurrenceDatetime)}
+                      </p>
+                    </div>
+
+                    <p className="text-base">{event.status}</p>
+                    <p className="text-xs">{event.location}</p>
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </div>
     </div>
   );
