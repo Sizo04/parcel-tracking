@@ -1,6 +1,7 @@
 import { formatTrackingTime } from "@/helpers/formatTrackingTime";
 import { TrackingEvents, TrackingSummary } from "@/types";
 import {
+  faCircleCheck,
   faMagnifyingGlass,
   faTruckFast,
 } from "@fortawesome/free-solid-svg-icons";
@@ -47,6 +48,7 @@ const Track = () => {
       events: tracking?.events || [],
     });
   };
+  const isShipped = trackingData?.lastEvent?.includes("DELIVERED") ?? false;
 
   return (
     <div className="text-white">
@@ -66,7 +68,7 @@ const Track = () => {
             placeholder="e.g. TF-2024-887261"
           />
           <button
-            className="flex items-center border-1 rounded py-1 px-3 border-gray-500 hover:bg-[var(--dark)]"
+            className="flex items-center border-1 rounded py-1 px-3 border-gray-500 hover:bg-[var(--light)]"
             type="submit"
           >
             <FontAwesomeIcon icon={faMagnifyingGlass} />
@@ -84,21 +86,29 @@ const Track = () => {
           <div className="mt-4 p-4 rounded-lg flex items-center justify-between bg-[var(--light)]">
             <div className="flex gap-2 items-center">
               <FontAwesomeIcon
-                icon={faTruckFast}
-                className={`p-3 bg-[#E6F1FB] rounded ${
-                  trackingData.lastEvent.includes("DELIVERED")
-                    ? "text-green-700"
-                    : "text-red-700"
+                icon={isShipped ? faCircleCheck : faTruckFast}
+                className={`p-4  rounded-lg ${
+                  isShipped
+                    ? "text-[#3B6D11] bg-[#EAF3DE] "
+                    : "text-[#1A56DB] bg-[#E6F1FB]"
                 }`}
               />
               <div>
                 <p>Shipment status</p>
                 <h3>{trackingData.lastEvent}</h3>
-                <p>{`Last update :${trackingData.lastUpdate.split("T")[0]} ${formatTrackingTime(trackingData.lastUpdate)}`}</p>
+                <p>{`Last update: ${trackingData.lastUpdate.split("T")[0]} ${formatTrackingTime(trackingData.lastUpdate)}`}</p>
               </div>
             </div>
             <div>
-              <p>{trackingData.lastEvent}</p>
+              <p
+                className={` text-sm rounded-xl px-1 ${
+                  isShipped
+                    ? "text-[#3B6D11] bg-[#EAF3DE]"
+                    : "text-[#1A56DB] bg-[#E6F1FB]"
+                }`}
+              >
+                {trackingData.lastEvent}
+              </p>
             </div>
           </div>
         )}
@@ -146,44 +156,53 @@ const Track = () => {
         {trackingData && (
           <div className="bg-[var(--light)] rounded-xl p-4">
             <h3>Tracking events</h3>
-            {events?.events.map((event, index) => {
-              const isLast = index === events.events.length - 1;
-              const isFirst = index === 0;
+            {trackingData && (
+              <div className="bg-[var(--light)] rounded-xl p-4">
+                {events?.events?.length ? (
+                  events.events.map((event, index) => {
+                    const isLast = index === events.events.length - 1;
+                    const isFirst = index === 0;
 
-              return (
-                <div key={event.eventId} className="flex gap-3">
-                  <div className="flex flex-col items-center">
-                    <div
-                      className={` h-2 w-2 rounded-full ${
-                        isFirst ? "bg-blue-500" : "bg-green-500"
-                      }`}
-                    ></div>
+                    return (
+                      <div key={event.eventId} className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div
+                            className={`h-2 w-2 rounded-full ${
+                              isFirst ? "bg-blue-500" : "bg-green-500"
+                            }`}
+                          />
 
-                    {!isLast && (
-                      <div className="m-1 h-full w-[1px] bg-gray-600" />
-                    )}
-                  </div>
+                          {!isLast && (
+                            <div className="m-1 h-full w-[1px] bg-gray-600" />
+                          )}
+                        </div>
 
-                  <div className="py-2">
-                    <div className="flex">
-                      <p className="text-xs">
-                        {event.occurrenceDatetime.split("T")[0]}
-                      </p>
+                        <div className="py-2">
+                          <div className="flex">
+                            <p className="text-xs">
+                              {event.occurrenceDatetime.split("T")[0]}
+                            </p>
 
-                      <p className="mx-1 text-xs"> · </p>
+                            <p className="mx-1 text-xs"> · </p>
 
-                      <p className="text-xs">
-                        {" "}
-                        {formatTrackingTime(event.occurrenceDatetime)}
-                      </p>
-                    </div>
+                            <p className="text-xs">
+                              {formatTrackingTime(event.occurrenceDatetime)}
+                            </p>
+                          </div>
 
-                    <p className="text-base">{event.status}</p>
-                    <p className="text-xs">{event.location}</p>
-                  </div>
-                </div>
-              );
-            })}
+                          <p className="text-base">{event.status}</p>
+                          <p className="text-xs">{event.location}</p>
+                        </div>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    No tracking events found
+                  </p>
+                )}
+              </div>
+            )}
           </div>
         )}
       </div>
