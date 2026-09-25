@@ -6,6 +6,7 @@ export type TrackingSummary = {
   origin: string;
   destination: string;
   servicetype: string;
+  trackingNumber: string;
 };
 
 export type TrackingEvents = {

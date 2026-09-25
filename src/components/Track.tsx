@@ -42,13 +42,15 @@ const Track = () => {
       origin: shipment?.originCountryCode || "Unknown",
       destination: shipment?.destinationCountryCode || "Unknown",
       servicetype: shipment?.serviceType || "Unknown",
+      trackingNumber: shipment?.trackingNumbers[0].tn || trackingData,
     });
 
     setEvents({
       events: tracking?.events || [],
     });
   };
-  const isShipped = trackingData?.lastEvent?.includes("DELIVERED") ?? false;
+  const isShipped =
+    trackingData?.lastEvent?.toLocaleUpperCase().includes("DELIVERED") ?? false;
 
   return (
     <div className="text-white">
@@ -63,7 +65,7 @@ const Track = () => {
         <form onSubmit={trackPackage} className="flex gap-2">
           <input
             onChange={(e) => setTrackingNumber(e.target.value)}
-            className="w-[90%] bg-[var(--light)] rounded"
+            className="w-[90%] bg-[var(--light)] rounded p-2"
             type="text"
             placeholder="e.g. TF-2024-887261"
           />
@@ -75,10 +77,11 @@ const Track = () => {
             <p>Track</p>
           </button>
         </form>
-        <div>
+        <div className="flex">
           <p>Try:</p>
-          <div className="tracking-numbers">
+          <div className="tracking-numbers flex">
             <p>1Z999AA10123456784</p>
+            <p>3318810025</p>
           </div>
         </div>
 
@@ -112,16 +115,18 @@ const Track = () => {
             </div>
           </div>
         )}
+
+        {/* detailed status - 6 tiles */}
         <div>
           {trackingData && (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2 my-2 mx-0">
               <div className="card p-2 rounded bg-[var(--light)]">
                 <p>Tracking #</p>
-                {trackingNumber}
+                {trackingData.trackingNumber}
               </div>
               <div className="card p-2 rounded bg-[var(--light)]">
                 <p>Carrier</p>
-                {trackingData.carrier}
+                {trackingData.carrier.toLocaleUpperCase()}
               </div>
               <div className="card p-2 rounded bg-[var(--light)]">
                 <p>Estimated delivery</p>
@@ -145,9 +150,8 @@ const Track = () => {
               </div>
 
               <div className="card p-2 rounded bg-[var(--light)]">
-                <p>
-                  <p>Service type</p>
-                </p>
+                <p>Service type</p>
+
                 <p>international</p>
               </div>
             </div>
